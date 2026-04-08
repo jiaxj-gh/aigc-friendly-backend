@@ -1,6 +1,3 @@
-import { promises as fs } from 'fs';
-import os from 'os';
-import path from 'path';
 import { Injectable } from '@nestjs/common';
 import { PriceAnalysisService } from '@modules/power-system/price-analysis/price-analysis.service';
 import type {
@@ -24,20 +21,14 @@ export class ExecutePriceAnalysisUsecase {
     progress?: PriceAnalysisProgressReporter,
   ): Promise<PriceAnalysisResult> {
     const input = normalizeExecutePriceAnalysisInput(params);
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'power-price-analysis-'));
+    await emitProgress(progress, 'Uploading and parsing files...');
+    const savedFiles = decodeFiles(input.files);
+    await emitProgress(progress, `Successfully uploaded ${String(savedFiles.length)} files.`);
 
-    try {
-      await emitProgress(progress, 'Uploading and parsing files...');
-      const savedFiles = await saveFiles(tempDir, input.files);
-      await emitProgress(progress, `Successfully uploaded ${String(savedFiles.length)} files.`);
-
-      return await this.priceAnalysisService.analyzePdfFiles({
-        files: savedFiles,
-        progress,
-      });
-    } finally {
-      await fs.rm(tempDir, { recursive: true, force: true });
-    }
+    return await this.priceAnalysisService.analyzePdfFiles({
+      files: savedFiles,
+      progress,
+    });
   }
 }
 
@@ -52,14 +43,13 @@ async function emitProgress(
   await progress(message);
 }
 
-async function saveFiles(
-  tempDir: string,
+function decodeFiles(
   files: readonly { readonly name: string; readonly content: string }[],
-): Promise<readonly PriceAnalysisSavedFile[]> {
+): readonly PriceAnalysisSavedFile[] {
   const savedFiles: PriceAnalysisSavedFile[] = [];
 
   for (const file of files) {
-    const filePath = path.join(tempDir, sanitizeFileName(file.name));
+    const safeName = sanitizeFileName(file.name);
 
     try {
       const buffer = Buffer.from(file.content, 'base64');
@@ -67,14 +57,13 @@ async function saveFiles(
         throw new Error('decoded file is empty');
       }
 
-      await fs.writeFile(filePath, buffer);
       savedFiles.push({
-        name: file.name,
-        path: filePath,
+        name: safeName.length > 0 ? safeName : file.name,
+        content: buffer,
       });
     } catch (error) {
       throw new Error(
-        `Failed to save file ${file.name}: ${error instanceof Error ? error.message : 'unknown error'}`,
+        `Failed to decode file ${file.name}: ${error instanceof Error ? error.message : 'unknown error'}`,
         {
           cause: error,
         },

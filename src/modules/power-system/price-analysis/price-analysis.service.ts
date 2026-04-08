@@ -46,7 +46,7 @@ export class PriceAnalysisService {
     let targetDate: string | null = null;
     for (const file of params.files) {
       await emitProgress(params.progress, `正在分析文件: ${file.name}`);
-      const content = await this.priceAnalysisPdfExtractor.extractText(file.path);
+      const content = await this.priceAnalysisPdfExtractor.extractText(file.content);
       const type = detectDocumentType(content);
       const date = extractDocumentDate(content);
 

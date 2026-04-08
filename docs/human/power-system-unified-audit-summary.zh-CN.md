@@ -85,6 +85,20 @@
 - 修复结果：
   - `IntervalSummaryAggregateRow` 已移回 `power-consumption.types.ts`
 
+### 5.4 Usecase 直接依赖底层文件系统 I/O
+
+- 原问题：
+  - `ExecutePowerTaskUsecase` 直接依赖 `fs/path`
+  - `ExecutePriceAnalysisUsecase` 直接依赖 `fs/path/os`
+- 风险：
+  - 违反 `usecases -> modules/core` 的依赖边界
+  - 把本地文件系统这种 runtime I/O 实现放进了 usecase
+- 修复结果：
+  - `ExecutePowerTaskUsecase` 已移除无业务必要的本地落盘逻辑
+  - `ExecutePriceAnalysisUsecase` 已改成纯内存文件解码
+  - `PriceAnalysisPdfExtractor` 支持直接接收 `Buffer`
+  - 当前 PowerSystem usecase 层已不再直接依赖文件系统 API
+
 ## 6. 当前剩余增强项
 
 ### 6.1 Worker consume E2E 仍可补强

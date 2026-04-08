@@ -1,6 +1,6 @@
 export interface PriceAnalysisSavedFile {
   readonly name: string;
-  readonly path: string;
+  readonly content: Buffer;
 }
 
 export interface PriceAnalysisJsonDataEntry {

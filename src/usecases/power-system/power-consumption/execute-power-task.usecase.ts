@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
-import { promises as fs } from 'fs';
-import path from 'path';
 import type { PowerUploadFileStatus } from '@app-types/power-system/power-task.types';
 import { POWER_CONSUMPTION_INTERVALS } from '@modules/power-system/power-consumption/power-consumption.constants';
 import {
@@ -126,20 +124,10 @@ export class ExecutePowerTaskUsecase {
       return detail;
     }
 
-    let savedFilePath: string;
-    try {
-      savedFilePath = await saveUploadedFile(file.originalName, file.buffer);
-    } catch (error) {
-      detail.status = 'failed';
-      detail.errorMessage = `文件保存失败: ${error instanceof Error ? error.message : '未知错误'}`;
-      return detail;
-    }
-
     try {
       const upsertResult = await this.powerConsumptionService.upsertActualPowerRows(rows);
       mergeCompanyDates(companyDates, upsertResult.companyDates);
     } catch (error) {
-      await fs.rm(savedFilePath, { force: true });
       detail.status = 'failed';
       detail.errorMessage = `数据入库失败: ${error instanceof Error ? error.message : '未知错误'}`;
       return detail;
@@ -311,20 +299,6 @@ function normalizeIntervalValue(value: unknown): number | null {
   }
 
   return parsed;
-}
-
-async function saveUploadedFile(originalName: string, buffer: Buffer): Promise<string> {
-  const directory = path.resolve(process.cwd(), 'uploads', 'power-system', 'tasks');
-  await fs.mkdir(directory, { recursive: true });
-  const filePath = path.join(directory, buildSavedFileName(originalName, new Date(), randomId()));
-  await fs.writeFile(filePath, buffer);
-  return filePath;
-}
-
-function buildSavedFileName(originalName: string, now: Date, randomSuffix: string): string {
-  const ext = path.extname(originalName) || '.csv';
-  const baseName = path.basename(originalName, ext).trim().replace(/\s+/g, '_') || 'file';
-  return `${baseName}_${formatCompactTimestamp(now)}_${randomSuffix}${ext}`;
 }
 
 function buildTaskName(now: Date): string {

@@ -1684,6 +1684,17 @@
   - `IntervalSummaryAggregateRow` 已从 QueryService 文件移回 `power-consumption.types.ts`
   - `PowerConsumptionService` 不再 import `queries/*.query.service.ts`
 
+- 已继续修复发现 4：
+  - `ExecutePowerTaskUsecase` 与 `ExecutePriceAnalysisUsecase` 原先直接依赖 `fs/path/os`
+  - 这违反了 `usecases -> modules/core` 的边界与 infrastructure I/O 归位规则
+  - 当前处理结果：
+    - `ExecutePowerTaskUsecase` 已去掉无业务必要的本地落盘与删除逻辑
+    - `ExecutePriceAnalysisUsecase` 已改成纯内存解码，不再创建临时目录或写临时文件
+    - `PriceAnalysisPdfExtractor` 现支持直接接收 `Buffer`
+  - 当前状态：
+    - PowerSystem usecase 层已不再直接 import `fs/path/os`
+    - 这条规范问题已经收口
+
 ### 13.5 本轮修复验证
 
 - 静态验证：
@@ -1692,12 +1703,12 @@
   - `npm run migration:drill:empty-db`
   - 定向 `eslint`
 - 测试验证：
-  - `npx jest src/usecases/power-system/power-consumption/run-power-task-pipeline.usecase.spec.ts --runInBand`
   - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/power-tasks-queue.e2e-spec.ts`
   - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/power-tasks.e2e-spec.ts`
   - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/power-task-status.e2e-spec.ts`
   - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/power-interval-summary.e2e-spec.ts`
   - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/power-report.e2e-spec.ts`
+  - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/price-analysis.e2e-spec.ts`
 - 注意：
   - 修复过程中曾误并发触发两条 PowerSystem E2E
   - 已废弃那次结果，并按顺序完整重跑

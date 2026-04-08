@@ -4,8 +4,8 @@ import zlib from 'zlib';
 
 @Injectable()
 export class PriceAnalysisPdfExtractor {
-  async extractText(filePath: string): Promise<string> {
-    const buffer = await fs.readFile(filePath);
+  async extractText(input: Buffer | string): Promise<string> {
+    const buffer = Buffer.isBuffer(input) ? input : await fs.readFile(input);
     if (process.env.JEST_WORKER_ID) {
       const fallbackText = extractTextFromSimplePdfStreams(buffer);
       if (fallbackText.trim().length > 0) {
