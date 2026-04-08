@@ -1,4 +1,4 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { PowerTaskHandler } from './power-task.handler';
 import {
@@ -20,5 +20,15 @@ export class PowerTaskProcessor extends WorkerHost {
     }
 
     throw new Error('Unsupported power task job');
+  }
+
+  @OnWorkerEvent('completed')
+  async onCompleted(job: PowerRunTaskJob): Promise<void> {
+    await this.handler.onCompleted({ job });
+  }
+
+  @OnWorkerEvent('failed')
+  async onFailed(job: PowerRunTaskJob | undefined, error: Error): Promise<void> {
+    await this.handler.onFailed({ job, error });
   }
 }

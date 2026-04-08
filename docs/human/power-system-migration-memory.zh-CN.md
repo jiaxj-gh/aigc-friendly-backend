@@ -1671,9 +1671,9 @@
     - Worker：
       - `PowerTaskProcessor` 消费 `power/run-task`
       - `ConsumePowerTaskJobUsecase` 调用 `RunPowerTaskPipelineUsecase`
-  - 当前保留项：
-    - 仍未接入仓库统一的 Async Task Record
-    - 这是后续增强项，不再是“API 内偷跑异步任务”的架构违规
+  - 当前状态：
+    - 后续已继续完成仓库统一的 Async Task Record 对接
+    - 因此这条问题现在已经完全收口，不再保留增强缺口
 
 - 已修复发现 2：
   - `RunPowerTaskPipelineUsecase` 已新增顶层 fatal 收口
@@ -1709,8 +1709,15 @@
 
 ### 13.6 剩余增强项
 
-- 当前 `power` 队列已经接入 BullMQ Worker，但还没有补：
-  - Worker consume E2E（独立 worker 进程视角）
-  - Async Task Record 三段状态对接
-- 这两项属于“与仓库统一 worker 模式进一步对齐”的增强项
+- 当前 `power` 队列已经接入 BullMQ Worker，且独立 worker consume E2E 已补齐：
+  - `test/08-qm-worker/power-worker-consume.e2e-spec.ts`
+- 当前 `power` 队列也已接入仓库统一的 Async Task Record 三段状态：
+  - 入队成功/失败：`QueuePowerTaskUsecase`
+  - Worker 开始/完成/失败：`ConsumePowerTaskJobUsecase`
+  - 队列路径 E2E：`test/09-power-system/power-tasks-queue.e2e-spec.ts`
+  - 独立 worker consume E2E：`test/08-qm-worker/power-worker-consume.e2e-spec.ts`
+- 当前不再有阻塞性交付缺口，后续只剩可选增强项：
+  - 更明确的 worker deployment / smoke 文档
+  - `power` 队列并发、重试、退避策略调优
+- 这项属于“与仓库统一 worker 审计模式进一步对齐”的增强项
 - 不再阻塞当前 PowerSystem 功能正确性与统一审计结论

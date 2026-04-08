@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AsyncTaskRecordModule } from '@src/modules/async-task-record/async-task-record.module';
 import { PowerSystemModule } from '@modules/power-system/power-system.module';
 import { GenerateBillDocxUsecase } from './bill/generate-bill-docx.usecase';
 import { CreateContractUsecase } from './contract/create-contract.usecase';
@@ -30,7 +31,7 @@ import { ExecutePriceAnalysisUsecase } from './price-analysis/execute-price-anal
 import { GetQuotationByContractTypeUsecase } from './quotation/get-quotation-by-contract-type.usecase';
 
 @Module({
-  imports: [PowerSystemModule],
+  imports: [PowerSystemModule, AsyncTaskRecordModule],
   providers: [
     GenerateBillDocxUsecase,
     CreateContractUsecase,

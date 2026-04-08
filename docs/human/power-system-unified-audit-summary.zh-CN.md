@@ -33,6 +33,7 @@
 - 审计修复后补充验证：
   - `npx jest src/usecases/power-system/power-consumption/run-power-task-pipeline.usecase.spec.ts --runInBand`
   - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/power-tasks-queue.e2e-spec.ts`
+  - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 08-qm-worker/power-worker-consume.e2e-spec.ts`
   - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/power-tasks.e2e-spec.ts`
   - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/power-task-status.e2e-spec.ts`
   - `NODE_ENV=e2e node ./test/run-e2e-group.js --file 09-power-system/power-interval-summary.e2e-spec.ts`
@@ -88,23 +89,20 @@
 
 ### 6.1 Worker consume E2E 仍可补强
 
-- 当前已有：
-  - API 入队 E2E
-  - 关键回归 E2E
-- 仍建议补：
-  - 独立 worker 进程视角的 consume E2E
-- 原因：
-  - 现在的验证已证明队列注册和默认入队路径正确
-  - 但还没有单独覆盖“worker 启动后消费 power queue”的完整模式样例
+- 已完成：
+  - 独立 worker 进程视角的 consume E2E 已补齐
+  - 文件：
+    - `/Users/jiaxiaojie/.codex/worktrees/4f7a/aigc-friendly-backend/test/08-qm-worker/power-worker-consume.e2e-spec.ts`
+- 当前不再作为剩余项
 
-### 6.2 Async Task Record 尚未接入 power queue
+### 6.2 Async Task Record 已接入 power queue
 
-- 当前状态：
-  - `power` 队列已接入 BullMQ
-  - 但还没有像 AI / Email 队列那样写统一 Async Task Record
-- 影响：
-  - 不影响 PowerSystem 功能正确性
-  - 但与仓库统一异步审计能力仍存在差距
+- 已完成：
+  - `QueuePowerTaskUsecase` 已在入队成功/失败时写入 Async Task Record
+  - `ConsumePowerTaskJobUsecase` 已在 worker `started/completed/failed` 阶段推进同一条 Async Task Record
+  - `power-tasks-queue.e2e-spec.ts` 已校验 `queued`
+  - `power-worker-consume.e2e-spec.ts` 已校验 `queued -> succeeded`
+- 当前不再作为剩余项
 
 ### 6.3 运行形态仍有进一步增强空间
 
@@ -117,9 +115,7 @@
 
 ## 7. 建议的后续执行顺序
 
-1. 为 `power` 队列补独立 worker consume E2E
-2. 评估并接入 Async Task Record 三段状态
-3. 输出最终交付说明：
+1. 输出最终交付说明：
    - 接口清单
    - 环境变量清单
    - 运行方式

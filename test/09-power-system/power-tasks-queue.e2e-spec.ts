@@ -7,6 +7,7 @@ import { Queue } from 'bullmq';
 import { initGraphQLSchema } from '@src/adapters/api/graphql/schema/schema.init';
 import { ApiModule } from '@src/bootstraps/api/api.module';
 import { BULLMQ_QUEUES } from '@src/infrastructure/bullmq/bullmq.constants';
+import { AsyncTaskRecordEntity } from '@src/modules/async-task-record/async-task-record.entity';
 import { PowerTaskSummaryEntity } from '@src/modules/power-system/power-consumption/power-task-summary.entity';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -15,6 +16,7 @@ import { DataSource, Repository } from 'typeorm';
 describe('PowerSystem power tasks queue path (e2e)', () => {
   let app: INestApplication<App>;
   let taskSummaryRepository: Repository<PowerTaskSummaryEntity>;
+  let asyncTaskRecordRepository: Repository<AsyncTaskRecordEntity>;
   let powerQueue: Queue;
   const originalInline = process.env.POWER_SYSTEM_TASKS_INLINE;
 
@@ -31,6 +33,7 @@ describe('PowerSystem power tasks queue path (e2e)', () => {
 
     const dataSource = moduleFixture.get(DataSource);
     taskSummaryRepository = dataSource.getRepository(PowerTaskSummaryEntity);
+    asyncTaskRecordRepository = dataSource.getRepository(AsyncTaskRecordEntity);
     powerQueue = moduleFixture.get<Queue>(getQueueToken(BULLMQ_QUEUES.POWER));
   });
 
@@ -51,6 +54,7 @@ describe('PowerSystem power tasks queue path (e2e)', () => {
   });
 
   async function clearTables(): Promise<void> {
+    await asyncTaskRecordRepository.createQueryBuilder().delete().execute();
     await taskSummaryRepository.createQueryBuilder().delete().execute();
   }
 
@@ -89,6 +93,22 @@ describe('PowerSystem power tasks queue path (e2e)', () => {
     expect(queuedJob?.data).toMatchObject({
       taskId: response.body.taskId,
       traceId: `power-task-${String(response.body.taskId)}`,
+    });
+
+    const asyncTaskRecord = await asyncTaskRecordRepository.findOneByOrFail({
+      queueName: 'power',
+      jobId: `power-task-${String(response.body.taskId)}`,
+    });
+    expect(asyncTaskRecord).toMatchObject({
+      jobName: 'run-task',
+      traceId: `power-task-${String(response.body.taskId)}`,
+      bizType: 'power_task',
+      bizKey: `power-task-${String(response.body.taskId)}`,
+      bizSubKey: String(response.body.taskId),
+      source: 'user_action',
+      status: 'queued',
+      dedupKey: `power-task-${String(response.body.taskId)}`,
+      maxAttempts: 3,
     });
   });
 });
