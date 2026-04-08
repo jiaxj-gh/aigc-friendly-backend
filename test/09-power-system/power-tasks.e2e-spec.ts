@@ -1,3 +1,4 @@
+import { getQueueToken } from '@nestjs/bullmq';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PowerPredictPort } from '@src/core/power-system/power-predict.port';
@@ -5,41 +6,52 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { initGraphQLSchema } from '@src/adapters/api/graphql/schema/schema.init';
 import { ApiModule } from '@src/bootstraps/api/api.module';
+import { WorkerModule } from '@src/bootstraps/worker/worker.module';
+import { BULLMQ_QUEUES } from '@src/infrastructure/bullmq/bullmq.constants';
 import { ActualPowerConsumptionEntity } from '@src/modules/power-system/power-consumption/actual-power-consumption.entity';
 import { ForecastPowerConsumptionEntity } from '@src/modules/power-system/power-consumption/forecast-power-consumption.entity';
 import { PowerTaskSummaryEntity } from '@src/modules/power-system/power-consumption/power-task-summary.entity';
+import { Queue } from 'bullmq';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource, Repository } from 'typeorm';
 
 describe('PowerSystem power tasks (e2e)', () => {
   let app: INestApplication<App>;
+  let workerApp: INestApplication;
   let taskSummaryRepository: Repository<PowerTaskSummaryEntity>;
   let actualPowerConsumptionRepository: Repository<ActualPowerConsumptionEntity>;
   let forecastPowerConsumptionRepository: Repository<ForecastPowerConsumptionEntity>;
+  let powerQueue: Queue;
   const predictApiClientMock: { loadPredict: jest.Mock<Promise<readonly number[]>> } = {
     loadPredict: jest.fn(),
   };
-  const originalInline = process.env.POWER_SYSTEM_TASKS_INLINE;
 
   beforeAll(async () => {
-    process.env.POWER_SYSTEM_TASKS_INLINE = 'true';
     initGraphQLSchema();
 
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const apiModuleFixture: TestingModule = await Test.createTestingModule({
       imports: [ApiModule],
+    }).compile();
+
+    app = apiModuleFixture.createNestApplication();
+    await app.init();
+
+    const workerModuleFixture: TestingModule = await Test.createTestingModule({
+      imports: [WorkerModule],
     })
       .overrideProvider(PowerPredictPort)
       .useValue(predictApiClientMock)
       .compile();
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    workerApp = workerModuleFixture.createNestApplication();
+    await workerApp.init();
 
-    const dataSource = moduleFixture.get(DataSource);
+    const dataSource = app.get(DataSource);
     taskSummaryRepository = dataSource.getRepository(PowerTaskSummaryEntity);
     actualPowerConsumptionRepository = dataSource.getRepository(ActualPowerConsumptionEntity);
     forecastPowerConsumptionRepository = dataSource.getRepository(ForecastPowerConsumptionEntity);
+    powerQueue = app.get<Queue>(getQueueToken(BULLMQ_QUEUES.POWER));
   });
 
   beforeEach(async () => {
@@ -47,15 +59,19 @@ describe('PowerSystem power tasks (e2e)', () => {
     predictApiClientMock.loadPredict.mockResolvedValue(buildPredictionSeries());
     await clearTables();
     await clearUploads();
+    await powerQueue.obliterate({ force: true });
   });
 
   afterAll(async () => {
     await clearTables();
     await clearUploads();
+    await powerQueue.obliterate({ force: true });
+    if (workerApp) {
+      await workerApp.close();
+    }
     if (app) {
       await app.close();
     }
-    process.env.POWER_SYSTEM_TASKS_INLINE = originalInline;
   });
 
   async function clearTables(): Promise<void> {
@@ -87,8 +103,12 @@ describe('PowerSystem power tasks (e2e)', () => {
       uploadReport: '文件 actual.csv: 状态 completed',
     });
 
-    const task = await taskSummaryRepository.findOneByOrFail({
+    const task = await waitForTaskStatus({
+      repository: taskSummaryRepository,
       taskId: response.body.taskId as number,
+      expectedStatus: 'completed',
+      timeoutMs: 30000,
+      pollMs: 100,
     });
 
     expect(task.taskName).toBe('四月预测任务');
@@ -149,11 +169,11 @@ describe('PowerSystem power tasks (e2e)', () => {
       updatedBy: 'admin',
     });
 
-    const forecastRows = await forecastPowerConsumptionRepository.find({
-      order: {
-        recordDate: 'ASC',
-        retailUserName: 'ASC',
-      },
+    const forecastRows = await waitForForecastRows({
+      repository: forecastPowerConsumptionRepository,
+      expectedAtLeast: 10,
+      timeoutMs: 30000,
+      pollMs: 100,
     });
 
     expect(forecastRows).toHaveLength(10);
@@ -194,8 +214,12 @@ describe('PowerSystem power tasks (e2e)', () => {
       uploadReport: '文件 invalid.txt: 状态 failed, 错误信息: 不支持的文件类型',
     });
 
-    const task = await taskSummaryRepository.findOneByOrFail({
+    const task = await waitForTaskStatus({
+      repository: taskSummaryRepository,
       taskId: response.body.taskId as number,
+      expectedStatus: 'completed',
+      timeoutMs: 5000,
+      pollMs: 100,
     });
 
     expect(task.status).toBe('completed');
@@ -240,8 +264,12 @@ describe('PowerSystem power tasks (e2e)', () => {
       )
       .expect(200);
 
-    const task = await taskSummaryRepository.findOneByOrFail({
+    const task = await waitForTaskStatus({
+      repository: taskSummaryRepository,
       taskId: response.body.taskId as number,
+      expectedStatus: 'completed',
+      timeoutMs: 30000,
+      pollMs: 100,
     });
 
     expect(task.status).toBe('completed');
@@ -265,6 +293,58 @@ describe('PowerSystem power tasks (e2e)', () => {
     expect(await forecastPowerConsumptionRepository.count()).toBe(5);
   });
 });
+
+async function waitForTaskStatus(input: {
+  readonly repository: Repository<PowerTaskSummaryEntity>;
+  readonly taskId: number;
+  readonly expectedStatus: string;
+  readonly timeoutMs: number;
+  readonly pollMs: number;
+}): Promise<PowerTaskSummaryEntity> {
+  const deadline = Date.now() + input.timeoutMs;
+
+  while (Date.now() < deadline) {
+    const task = await input.repository.findOneBy({ taskId: input.taskId });
+    if (task?.status === input.expectedStatus) {
+      return task;
+    }
+
+    await sleep(input.pollMs);
+  }
+
+  throw new Error(`Power task ${String(input.taskId)} did not reach ${input.expectedStatus}`);
+}
+
+async function waitForForecastRows(input: {
+  readonly repository: Repository<ForecastPowerConsumptionEntity>;
+  readonly expectedAtLeast: number;
+  readonly timeoutMs: number;
+  readonly pollMs: number;
+}): Promise<ForecastPowerConsumptionEntity[]> {
+  const deadline = Date.now() + input.timeoutMs;
+
+  while (Date.now() < deadline) {
+    const rows = await input.repository.find({
+      order: {
+        recordDate: 'ASC',
+        retailUserName: 'ASC',
+      },
+    });
+    if (rows.length >= input.expectedAtLeast) {
+      return rows;
+    }
+
+    await sleep(input.pollMs);
+  }
+
+  throw new Error('Forecast rows were not produced in time');
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
 function buildActualCsv(
   companyName: string,

@@ -18,10 +18,8 @@ describe('PowerSystem power tasks queue path (e2e)', () => {
   let taskSummaryRepository: Repository<PowerTaskSummaryEntity>;
   let asyncTaskRecordRepository: Repository<AsyncTaskRecordEntity>;
   let powerQueue: Queue;
-  const originalInline = process.env.POWER_SYSTEM_TASKS_INLINE;
 
   beforeAll(async () => {
-    process.env.POWER_SYSTEM_TASKS_INLINE = 'false';
     initGraphQLSchema();
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -50,7 +48,6 @@ describe('PowerSystem power tasks queue path (e2e)', () => {
     if (app) {
       await app.close();
     }
-    process.env.POWER_SYSTEM_TASKS_INLINE = originalInline;
   });
 
   async function clearTables(): Promise<void> {
@@ -65,7 +62,7 @@ describe('PowerSystem power tasks queue path (e2e)', () => {
     });
   }
 
-  it('enqueues the compute pipeline into bullmq when inline mode is disabled', async () => {
+  it('enqueues the compute pipeline into bullmq', async () => {
     const response = await request(app.getHttpServer())
       .post('/power-system/power-consumption/tasks')
       .field('taskName', '排队任务')

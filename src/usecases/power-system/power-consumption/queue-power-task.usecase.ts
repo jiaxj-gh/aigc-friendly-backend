@@ -5,7 +5,7 @@ import {
 } from '@src/core/common/async-task/async-task-identifier.policy';
 import { AsyncTaskRecordService } from '@src/modules/async-task-record/async-task-record.service';
 import type { AsyncTaskRecordSource } from '@src/modules/async-task-record/async-task-record.types';
-import { PowerConsumptionQueueService } from '@modules/power-system/power-consumption/power-consumption.queue.service';
+import { PowerConsumptionQueueService } from '@modules/power-system/power-consumption-queue/power-consumption-queue.service';
 import { PowerConsumptionService } from '@modules/power-system/power-consumption/power-consumption.service';
 
 export interface QueuePowerTaskUsecaseParams {

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AsyncTaskRecordModule } from '@src/modules/async-task-record/async-task-record.module';
+import { PowerConsumptionQueueModule } from '@modules/power-system/power-consumption-queue/power-consumption-queue.module';
 import { PowerSystemModule } from '@modules/power-system/power-system.module';
 import { GenerateBillDocxUsecase } from './bill/generate-bill-docx.usecase';
 import { CreateContractUsecase } from './contract/create-contract.usecase';
@@ -26,12 +27,11 @@ import { GetPowerIntervalSummaryUsecase } from './power-consumption/get-power-in
 import { GetPowerTaskStatusUsecase } from './power-consumption/get-power-task-status.usecase';
 import { ListPowerCompaniesUsecase } from './power-consumption/list-power-companies.usecase';
 import { QueuePowerTaskUsecase } from './power-consumption/queue-power-task.usecase';
-import { RunPowerTaskPipelineUsecase } from './power-consumption/run-power-task-pipeline.usecase';
 import { ExecutePriceAnalysisUsecase } from './price-analysis/execute-price-analysis.usecase';
 import { GetQuotationByContractTypeUsecase } from './quotation/get-quotation-by-contract-type.usecase';
 
 @Module({
-  imports: [PowerSystemModule, AsyncTaskRecordModule],
+  imports: [PowerSystemModule, PowerConsumptionQueueModule, AsyncTaskRecordModule],
   providers: [
     GenerateBillDocxUsecase,
     CreateContractUsecase,
@@ -58,7 +58,6 @@ import { GetQuotationByContractTypeUsecase } from './quotation/get-quotation-by-
     ListPowerCompaniesUsecase,
     ExecutePowerTaskUsecase,
     QueuePowerTaskUsecase,
-    RunPowerTaskPipelineUsecase,
     ExecutePriceAnalysisUsecase,
     GetQuotationByContractTypeUsecase,
   ],
@@ -88,7 +87,6 @@ import { GetQuotationByContractTypeUsecase } from './quotation/get-quotation-by-
     ListPowerCompaniesUsecase,
     ExecutePowerTaskUsecase,
     QueuePowerTaskUsecase,
-    RunPowerTaskPipelineUsecase,
     ExecutePriceAnalysisUsecase,
     GetQuotationByContractTypeUsecase,
   ],

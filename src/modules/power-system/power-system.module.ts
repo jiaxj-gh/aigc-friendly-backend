@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BullMqModule } from '@src/infrastructure/bullmq/bullmq.module';
 import { DocxInfrastructureModule } from '@src/infrastructure/docx/docx-infrastructure.module';
-import { PowerPredictInfrastructureModule } from '@src/infrastructure/power-predict/power-predict-infrastructure.module';
 import { PriceAnalysisInfrastructureModule } from '@src/infrastructure/price-analysis/price-analysis-infrastructure.module';
 import { BillDocxService } from './bill/bill-docx.service';
 import { ContractEntity } from './contract/contract.entity';
@@ -18,7 +16,6 @@ import { PartyBQueryService } from './party-b/queries/party-b.query.service';
 import { PartyBService } from './party-b/party-b.service';
 import { ActualPowerConsumptionEntity } from './power-consumption/actual-power-consumption.entity';
 import { ForecastPowerConsumptionEntity } from './power-consumption/forecast-power-consumption.entity';
-import { PowerConsumptionQueueService } from './power-consumption/power-consumption.queue.service';
 import { PowerConsumptionQueryService } from './power-consumption/queries/power-consumption.query.service';
 import { PowerConsumptionService } from './power-consumption/power-consumption.service';
 import { PowerTaskSummaryEntity } from './power-consumption/power-task-summary.entity';
@@ -32,9 +29,7 @@ import { QuotationService } from './quotation/quotation.service';
 
 @Module({
   imports: [
-    BullMqModule,
     DocxInfrastructureModule,
-    PowerPredictInfrastructureModule,
     PriceAnalysisInfrastructureModule,
     TypeOrmModule.forFeature([
       PartyAEntity,
@@ -56,7 +51,6 @@ import { QuotationService } from './quotation/quotation.service';
     PartyAQueryService,
     PartyBService,
     PartyBQueryService,
-    PowerConsumptionQueueService,
     PowerConsumptionService,
     PowerConsumptionQueryService,
     PriceAnalysisService,
@@ -67,13 +61,11 @@ import { QuotationService } from './quotation/quotation.service';
     QuotationQueryService,
   ],
   exports: [
-    TypeOrmModule,
     BillDocxService,
     PartyAService,
     PartyAQueryService,
     PartyBService,
     PartyBQueryService,
-    PowerConsumptionQueueService,
     PowerConsumptionService,
     PowerConsumptionQueryService,
     PriceAnalysisService,
@@ -82,7 +74,6 @@ import { QuotationService } from './quotation/quotation.service';
     ContractQueryService,
     QuotationService,
     QuotationQueryService,
-    PowerPredictInfrastructureModule,
   ],
 })
 export class PowerSystemModule {}

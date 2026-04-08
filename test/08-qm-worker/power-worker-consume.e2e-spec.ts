@@ -28,10 +28,8 @@ describe('Power Worker consume flow (e2e)', () => {
   const predictApiClientMock: { loadPredict: jest.Mock<Promise<readonly number[]>> } = {
     loadPredict: jest.fn(),
   };
-  const originalInline = process.env.POWER_SYSTEM_TASKS_INLINE;
 
   beforeAll(async () => {
-    process.env.POWER_SYSTEM_TASKS_INLINE = 'false';
     initGraphQLSchema();
 
     const apiModuleFixture: TestingModule = await Test.createTestingModule({
@@ -75,7 +73,6 @@ describe('Power Worker consume flow (e2e)', () => {
     if (apiApp) {
       await apiApp.close();
     }
-    process.env.POWER_SYSTEM_TASKS_INLINE = originalInline;
   });
 
   async function clearTables(): Promise<void> {

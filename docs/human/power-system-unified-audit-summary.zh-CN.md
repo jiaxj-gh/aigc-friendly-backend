@@ -53,7 +53,7 @@
 ### 5.1 预测任务默认在 API 进程偷跑
 
 - 原问题：
-  - `POST /power-system/power-consumption/tasks` 在非 inline 模式下仍由 API 进程直接后台执行
+  - `POST /power-system/power-consumption/tasks` 仍保留 API 直跑消费链路
 - 风险：
   - 不符合仓库 `API -> Queue -> Worker` 设计
   - 无 durable queue / retry / worker 隔离
@@ -69,7 +69,7 @@
 - 风险：
   - `powerTaskStatus`、`powerCompanyJobs`、人工排障都会看到悬挂任务
 - 修复结果：
-  - `RunPowerTaskPipelineUsecase` 增加顶层 fatal 收口
+  - `PowerTaskPipelineService` 增加顶层 fatal 收口
   - `PowerConsumptionService.finalizeTaskPipelineWithFatalError()` 会写回：
     - `status=completed`
     - `endTime`
@@ -107,8 +107,7 @@
 ### 6.3 运行形态仍有进一步增强空间
 
 - 当前实现：
-  - 测试环境依赖 `POWER_SYSTEM_TASKS_INLINE=true` 做稳定同步验证
-  - 默认产品路径已是 `API 入队 -> Worker 消费`
+  - PowerSystem 预测任务统一走 `API 入队 -> Worker 消费`
 - 后续可选增强：
   - 提供更显式的 worker deployment / smoke 文档
   - 根据预测接口吞吐调优 `power` 队列并发和退避策略

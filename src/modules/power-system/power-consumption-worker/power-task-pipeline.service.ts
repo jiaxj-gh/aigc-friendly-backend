@@ -1,24 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { PowerPredictPort } from '@src/core/power-system/power-predict.port';
+import type { PowerComputeJobStatus } from '@app-types/power-system/power-task.types';
+import { POWER_CONSUMPTION_INTERVALS } from '@modules/power-system/power-consumption/power-consumption.constants';
 import {
   PowerConsumptionService,
   type ForecastHistoryDayRecord,
 } from '@modules/power-system/power-consumption/power-consumption.service';
-import { POWER_CONSUMPTION_INTERVALS } from '@modules/power-system/power-consumption/power-consumption.constants';
-import type { PowerComputeJobStatus } from '@app-types/power-system/power-task.types';
 
-export interface RunPowerTaskPipelineUsecaseParams {
+export interface PowerTaskPipelineParams {
   readonly taskId: number;
 }
 
 @Injectable()
-export class RunPowerTaskPipelineUsecase {
+export class PowerTaskPipelineService {
   constructor(
     private readonly powerConsumptionService: PowerConsumptionService,
     private readonly powerPredictApiClient: PowerPredictPort,
   ) {}
 
-  async execute(params: RunPowerTaskPipelineUsecaseParams): Promise<void> {
+  async run(params: PowerTaskPipelineParams): Promise<void> {
     let taskIdForFatal = params.taskId;
     try {
       const task = await this.powerConsumptionService.getTaskSummaryOrThrow(params.taskId);
@@ -262,12 +262,12 @@ function appendTaskErrorMessage(current: string | null, message: string | null):
   return `${current}${message}`;
 }
 
-function normalizeJsonObject(value: unknown): Record<string, unknown> {
-  if (isPlainObject(value)) {
-    return value;
-  }
+function asJsonRecord(value: MutableComputeSummary): Record<string, unknown> {
+  return value as unknown as Record<string, unknown>;
+}
 
-  return {};
+function normalizeJsonObject(value: unknown): Record<string, unknown> {
+  return isPlainObject(value) ? value : {};
 }
 
 function normalizeJsonArray(value: unknown): unknown[] {
@@ -278,29 +278,20 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function parseUtcDate(value: string): Date {
-  return new Date(`${value}T00:00:00.000Z`);
+function parseUtcDate(dateString: string): Date {
+  return new Date(`${dateString}T00:00:00.000Z`);
 }
 
-function addUtcDays(base: Date, days: number): Date {
-  const next = new Date(base);
-  next.setUTCDate(next.getUTCDate() + days);
-  return next;
+function diffUtcDays(left: Date, right: Date): number {
+  return Math.floor((left.getTime() - right.getTime()) / 86_400_000);
 }
 
-function compareIsoDate(value: string, compareTo: Date): number {
-  return value.localeCompare(formatUtcDate(compareTo));
+function addUtcDays(date: Date, days: number): string {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result.toISOString().slice(0, 10);
 }
 
-function formatUtcDate(value: Date): string {
-  return value.toISOString().slice(0, 10);
-}
-
-function diffUtcDays(later: Date, earlier: Date): number {
-  const ms = later.getTime() - earlier.getTime();
-  return Math.round(ms / 86400000);
-}
-
-function asJsonRecord(value: MutableComputeSummary): Record<string, unknown> {
-  return value as unknown as Record<string, unknown>;
+function compareIsoDate(left: string, right: string): number {
+  return left.localeCompare(right);
 }

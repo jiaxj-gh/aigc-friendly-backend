@@ -117,9 +117,6 @@
 
 ### 4.2 PowerSystem 专用
 
-- `POWER_SYSTEM_TASKS_INLINE`
-  - `false`：默认产品路径，`API 入队 -> Worker 消费`
-  - `true`：测试/调试时允许同步执行
 - `POWER_SYSTEM_PREDICT_API_URL`
   - 预测服务地址，对齐 legacy `DEFAULT_PREDICT_API_URL`
 - `POWER_SYSTEM_PREDICT_API_TIMEOUT_MS`
@@ -149,7 +146,7 @@
   - `QueuePowerTaskUsecase`
   - BullMQ `power/run-task`
   - `PowerTaskProcessor`
-  - `RunPowerTaskPipelineUsecase`
+  - `PowerTaskPipelineService`
 - 需要同时启动 worker 进程，才能走完整产品路径
 
 关键文件：

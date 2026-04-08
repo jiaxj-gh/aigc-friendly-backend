@@ -1,7 +1,7 @@
 import { PowerPredictPort } from '@src/core/power-system/power-predict.port';
-import { RunPowerTaskPipelineUsecase } from './run-power-task-pipeline.usecase';
+import { PowerTaskPipelineService } from './power-task-pipeline.service';
 
-describe('RunPowerTaskPipelineUsecase', () => {
+describe('PowerTaskPipelineService', () => {
   it('finalizes the task when a fatal pipeline error happens before job execution', async () => {
     const powerConsumptionService = {
       getTaskSummaryOrThrow: jest.fn().mockResolvedValue({
@@ -23,12 +23,12 @@ describe('RunPowerTaskPipelineUsecase', () => {
       loadPredict: jest.fn(),
     };
 
-    const usecase = new RunPowerTaskPipelineUsecase(
+    const service = new PowerTaskPipelineService(
       powerConsumptionService as never,
       powerPredictApiClient as unknown as PowerPredictPort,
     );
 
-    await expect(usecase.execute({ taskId: 12 })).rejects.toThrow('db_down');
+    await expect(service.run({ taskId: 12 })).rejects.toThrow('db_down');
 
     expect(powerConsumptionService.finalizeTaskPipelineWithFatalError).toHaveBeenCalledWith({
       taskId: 12,

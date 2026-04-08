@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { resolveAsyncTaskBizKey } from '@src/core/common/async-task/async-task-identifier.policy';
 import { AsyncTaskRecordService } from '@src/modules/async-task-record/async-task-record.service';
 import type { AsyncTaskRecordSource } from '@src/modules/async-task-record/async-task-record.types';
-import { RunPowerTaskPipelineUsecase } from '@usecases/power-system/power-consumption/run-power-task-pipeline.usecase';
+import { PowerTaskPipelineService } from '@modules/power-system/power-consumption-worker/power-task-pipeline.service';
 
 export interface ConsumePowerTaskJobUsecaseInput {
   readonly queueName: string;
@@ -42,7 +42,7 @@ export interface ConsumePowerTaskJobUsecaseResult {
 @Injectable()
 export class ConsumePowerTaskJobUsecase {
   constructor(
-    private readonly runPowerTaskPipelineUsecase: RunPowerTaskPipelineUsecase,
+    private readonly powerTaskPipelineService: PowerTaskPipelineService,
     private readonly asyncTaskRecordService: AsyncTaskRecordService,
   ) {}
 
@@ -70,7 +70,7 @@ export class ConsumePowerTaskJobUsecase {
       },
     });
 
-    await this.runPowerTaskPipelineUsecase.execute({
+    await this.powerTaskPipelineService.run({
       taskId: input.taskId,
     });
 

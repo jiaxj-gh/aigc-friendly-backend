@@ -9,7 +9,6 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   DomainError,
@@ -19,7 +18,6 @@ import {
 import type { Response } from 'express';
 import { ExecutePowerTaskUsecase } from '@usecases/power-system/power-consumption/execute-power-task.usecase';
 import { QueuePowerTaskUsecase } from '@usecases/power-system/power-consumption/queue-power-task.usecase';
-import { RunPowerTaskPipelineUsecase } from '@usecases/power-system/power-consumption/run-power-task-pipeline.usecase';
 import type { ExecutePowerTaskRequest } from './dto/execute-power-task.request';
 
 interface UploadedTaskFile {
@@ -32,8 +30,6 @@ export class PowerSystemPowerTaskController {
   constructor(
     private readonly executePowerTaskUsecase: ExecutePowerTaskUsecase,
     private readonly queuePowerTaskUsecase: QueuePowerTaskUsecase,
-    private readonly runPowerTaskPipelineUsecase: RunPowerTaskPipelineUsecase,
-    private readonly configService: ConfigService,
   ) {}
 
   @Post('tasks')
@@ -53,22 +49,13 @@ export class PowerSystemPowerTaskController {
         })),
       });
 
-      if (this.shouldRunInline()) {
-        await this.runPowerTaskPipelineUsecase.execute({ taskId: result.taskId });
-      } else {
-        await this.queuePowerTaskUsecase.execute({ taskId: result.taskId });
-      }
+      await this.queuePowerTaskUsecase.execute({ taskId: result.taskId });
 
       res.status(HttpStatus.OK).type('application/json').send(JSON.stringify(result));
       return;
     } catch (error) {
       this.writeErrorResponse(res, error);
     }
-  }
-
-  private shouldRunInline(): boolean {
-    const raw = this.configService.get<string>('POWER_SYSTEM_TASKS_INLINE');
-    return raw === '1' || raw?.toLowerCase() === 'true';
   }
 
   private writeErrorResponse(res: Response, error: unknown): void {

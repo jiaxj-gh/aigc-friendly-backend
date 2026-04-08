@@ -1132,9 +1132,8 @@
 - 延后实现项：
   - 当前已补齐真实 forecast 外调与 forecast 表落库
   - 目前剩余的增强方向不是“功能缺失”，而是“运行形态优化”：
-    - 默认是 API 进程内后台推进
-    - E2E 通过 `POWER_SYSTEM_TASKS_INLINE=true` 走同步执行，确保稳定验证
-    - 若后续需要更强健的生产运行形态，可再升级为独立 worker / queue 化
+    - 当前已切到统一的 `API 入队 -> Worker 消费`
+    - 若后续需要更强健的生产运行形态，可继续增强 worker deployment / smoke 文档与队列运行参数
 
 ### `powerTaskStatus`
 
@@ -1466,9 +1465,6 @@
   - 必须采用“模板 + 占位符替换”的实现
   - 模板版式应作为业务要求优先保留
 - 当前对 PowerSystem 真实预测执行的环境口径已更新：
-  - `POWER_SYSTEM_TASKS_INLINE`
-    - `true` 时：任务接口内同步执行真实预测
-    - `false` 时：任务接口返回后，在 API 进程内后台推进
   - `POWER_SYSTEM_PREDICT_API_URL`
     - 外部预测接口地址
     - 默认 legacy 值：`http://221.224.90.218:8000/load_predict`
@@ -1670,13 +1666,13 @@
       - `QueuePowerTaskUsecase` 负责向 BullMQ `power/run-task` 入队
     - Worker：
       - `PowerTaskProcessor` 消费 `power/run-task`
-      - `ConsumePowerTaskJobUsecase` 调用 `RunPowerTaskPipelineUsecase`
+      - `ConsumePowerTaskJobUsecase` 调用 `PowerTaskPipelineService`
   - 当前状态：
     - 后续已继续完成仓库统一的 Async Task Record 对接
     - 因此这条问题现在已经完全收口，不再保留增强缺口
 
 - 已修复发现 2：
-  - `RunPowerTaskPipelineUsecase` 已新增顶层 fatal 收口
+  - `PowerTaskPipelineService` 已新增顶层 fatal 收口
   - 若在任务加载、首次状态保存、末次状态保存等阶段抛出异常：
     - 会调用 `finalizeTaskPipelineWithFatalError()`
     - 将任务写为 `completed`
