@@ -4,6 +4,10 @@
   "sourceRoot": "src",
   "entryFile": "bootstraps/api/main",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "assets": [
+      "src/infrastructure/docx/templates/**/*",
+      "src/infrastructure/price-analysis/templates/**/*"
+    ]
   }
 }

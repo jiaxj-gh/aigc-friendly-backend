@@ -145,6 +145,15 @@ export const LEARNER_ERROR = {
 } as const;
 Object.freeze(LEARNER_ERROR);
 
+export const POWER_SYSTEM_ERROR = {
+  PARTY_A_NOT_FOUND: 'POWER_SYSTEM_PARTY_A_NOT_FOUND',
+  PARTY_B_NOT_FOUND: 'POWER_SYSTEM_PARTY_B_NOT_FOUND',
+  CONTRACT_NOT_FOUND: 'POWER_SYSTEM_CONTRACT_NOT_FOUND',
+  TASK_NOT_FOUND: 'POWER_SYSTEM_TASK_NOT_FOUND',
+  REPORT_NOT_FOUND: 'POWER_SYSTEM_REPORT_NOT_FOUND',
+} as const;
+Object.freeze(POWER_SYSTEM_ERROR);
+
 export const TIME_ERROR = {
   INVALID_TIME_INPUT: 'TIME_INVALID_TIME_INPUT',
   INVALID_SYSTEM_EVENT_TIME: 'TIME_INVALID_SYSTEM_EVENT_TIME',
@@ -177,6 +186,7 @@ export type VerificationRecordErrorCode =
 export type AsyncTaskRecordErrorCode =
   (typeof ASYNC_TASK_RECORD_ERROR)[keyof typeof ASYNC_TASK_RECORD_ERROR];
 export type LearnerErrorCode = (typeof LEARNER_ERROR)[keyof typeof LEARNER_ERROR];
+export type PowerSystemErrorCode = (typeof POWER_SYSTEM_ERROR)[keyof typeof POWER_SYSTEM_ERROR];
 export type TimeErrorCode = (typeof TIME_ERROR)[keyof typeof TIME_ERROR];
 export type InputNormalizeErrorCode =
   (typeof INPUT_NORMALIZE_ERROR)[keyof typeof INPUT_NORMALIZE_ERROR];
@@ -200,6 +210,7 @@ export type DomainErrorCode =
   | VerificationRecordErrorCode
   | AsyncTaskRecordErrorCode
   | LearnerErrorCode
+  | PowerSystemErrorCode
   | TimeErrorCode
   | InputNormalizeErrorCode
   | PaginationErrorCode;

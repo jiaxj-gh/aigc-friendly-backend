@@ -62,6 +62,19 @@ export const BULLMQ_QUEUE_REGISTRY: Readonly<Record<BullMqQueueName, BullMqQueue
       shutdownGraceMs: 12000,
     },
   },
+  [BULLMQ_QUEUES.POWER]: {
+    queueName: BULLMQ_QUEUES.POWER,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 3000 },
+      removeOnComplete: 200,
+      removeOnFail: 1000,
+    },
+    runtime: {
+      concurrency: 2,
+      shutdownGraceMs: 15000,
+    },
+  },
 };
 
 export const BULLMQ_QUEUE_NAMES: ReadonlyArray<BullMqQueueName> = Object.values(BULLMQ_QUEUES);

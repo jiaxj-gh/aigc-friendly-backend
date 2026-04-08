@@ -22,6 +22,16 @@ const GROUPS = {
       '07-pagination-sort-search/learners-pagination.e2e-spec.ts',
       '07-pagination-sort-search/search.e2e-spec.ts',
       '07-pagination-sort-search/sort.e2e-spec.ts',
+      '09-power-system/create-party-a.e2e-spec.ts',
+      '09-power-system/delete-party-a.e2e-spec.ts',
+      '09-power-system/update-party-a.e2e-spec.ts',
+      '09-power-system/party-a.e2e-spec.ts',
+      '09-power-system/party-as.e2e-spec.ts',
+      '09-power-system/create-party-b.e2e-spec.ts',
+      '09-power-system/delete-party-b.e2e-spec.ts',
+      '09-power-system/update-party-b.e2e-spec.ts',
+      '09-power-system/party-b.e2e-spec.ts',
+      '09-power-system/party-bs.e2e-spec.ts',
     ],
     needs: {
       mysql: true,
@@ -66,9 +76,9 @@ const DEFAULT_GROUP = 'core';
 
 const parseCsv = (raw) =>
   (raw || '')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 
 const requestedGroup = (process.env.E2E_GROUP || '').trim();
 const selectedGroupName = requestedGroup || DEFAULT_GROUP;

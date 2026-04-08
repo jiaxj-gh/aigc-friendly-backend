@@ -6,6 +6,7 @@ import { AuthUsecasesModule } from '@src/usecases/auth/auth-usecases.module';
 import { AsyncTaskRecordUsecasesModule } from '@src/usecases/async-task-record/async-task-record-usecases.module';
 import { EmailQueueUsecasesModule } from '@src/usecases/email-queue/email-queue-usecases.module';
 import { IdentityManagementUsecasesModule } from '@src/usecases/identity-management/identity-management-usecases.module';
+import { PowerSystemUsecasesModule } from '@src/usecases/power-system/power-system-usecases.module';
 import { RegistrationUsecasesModule } from '@src/usecases/registration/registration-usecases.module';
 import { ThirdPartyAccountsUsecasesModule } from '@src/usecases/third-party-accounts/third-party-accounts-usecases.module';
 import { VerificationRecordUsecasesModule } from '@src/usecases/verification-record/verification-record-usecases.module';
@@ -24,6 +25,11 @@ import { CustomerResolver } from './identity-management/customer/customer.resolv
 import { IdentityManagementResolver } from './identity-management/identity-management.resolver';
 import { LearnerResolver } from './identity-management/learner/learner.resolver';
 import { ManagerResolver } from './identity-management/manager/manager.resolver';
+import { PowerSystemContractResolver } from './power-system/contract/contract.resolver';
+import { PowerSystemPartyAResolver } from './power-system/party-a/party-a.resolver';
+import { PowerSystemPartyBResolver } from './power-system/party-b/party-b.resolver';
+import { PowerSystemPowerConsumptionResolver } from './power-system/power-consumption/power-consumption.resolver';
+import { PowerSystemQuotationResolver } from './power-system/quotation/quotation.resolver';
 import { RegistrationResolver } from './registration/registration.resolver';
 import { ThirdPartyAuthResolver } from './third-party-auth/third-party-auth.resolver';
 import { VerificationRecordResolver } from './verification-record/verification-record.resolver';
@@ -48,6 +54,7 @@ import { QmWorkerEntryGuard } from './guards/qm-worker-entry.guard';
     RegistrationUsecasesModule,
     ThirdPartyAccountsUsecasesModule,
     IdentityManagementUsecasesModule,
+    PowerSystemUsecasesModule,
     VerificationRecordUsecasesModule,
     VerificationUsecasesModule,
   ],
@@ -65,6 +72,11 @@ import { QmWorkerEntryGuard } from './guards/qm-worker-entry.guard';
     CustomerResolver, // 注册客户管理 resolver
     CoachResolver, // 注册教练管理 resolver
     ManagerResolver, // 注册经理管理 resolver
+    PowerSystemContractResolver,
+    PowerSystemPartyAResolver,
+    PowerSystemPartyBResolver,
+    PowerSystemPowerConsumptionResolver,
+    PowerSystemQuotationResolver,
     UserInfoResolver,
     // Guards
     QmWorkerEntryGuard,
@@ -85,6 +97,11 @@ import { QmWorkerEntryGuard } from './guards/qm-worker-entry.guard';
     CustomerResolver, // 导出客户管理 resolver
     CoachResolver, // 导出教练管理 resolver
     ManagerResolver, // 导出经理管理 resolver
+    PowerSystemContractResolver,
+    PowerSystemPartyAResolver,
+    PowerSystemPartyBResolver,
+    PowerSystemPowerConsumptionResolver,
+    PowerSystemQuotationResolver,
     UserInfoResolver,
     QmWorkerEntryGuard,
     JwtAuthGuard,

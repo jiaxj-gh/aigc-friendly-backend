@@ -1,6 +1,8 @@
 // src/bootstraps/api/api.module.ts
+import { HttpAdapterModule } from '@src/adapters/api/http/http-adapter.module';
 import { GraphQLAdapterModule } from '@src/adapters/api/graphql/graphql-adapter.module';
 import { AppConfigModule } from '@src/infrastructure/config/config.module';
+import { WsAdapterModule } from '@src/adapters/api/ws/ws-adapter.module';
 import { DatabaseModule } from '@src/infrastructure/database/database.module';
 import { FieldEncryptionModule } from '@src/infrastructure/field-encryption/field-encryption.module';
 import { GqlAllExceptionsFilter } from '@src/infrastructure/graphql/filters/graphql-exception.filter';
@@ -24,6 +26,8 @@ import { ApiService } from './api.service';
     DatabaseModule,
     AppGraphQLModule,
     GraphQLAdapterModule,
+    HttpAdapterModule,
+    WsAdapterModule,
     FieldEncryptionModule,
     PasswordModule,
     AccountModule,

@@ -8,6 +8,7 @@ import {
   JWT_ERROR,
   PAGINATION_ERROR,
   PERMISSION_ERROR,
+  POWER_SYSTEM_ERROR,
   THIRDPARTY_ERROR,
 } from '@core/common/errors';
 import { ArgumentsHost, Catch, HttpException } from '@nestjs/common';
@@ -150,6 +151,13 @@ function mapDomainErrorToGqlCode(errorCode: string): string {
     [ACCOUNT_ERROR.NICKNAME_TAKEN]: 'CONFLICT',
     [ACCOUNT_ERROR.EMAIL_TAKEN]: 'CONFLICT',
     [ACCOUNT_ERROR.USER_INFO_NOT_FOUND]: 'NOT_FOUND',
+
+    // PowerSystem 相关错误
+    [POWER_SYSTEM_ERROR.PARTY_A_NOT_FOUND]: 'NOT_FOUND',
+    [POWER_SYSTEM_ERROR.PARTY_B_NOT_FOUND]: 'NOT_FOUND',
+    [POWER_SYSTEM_ERROR.CONTRACT_NOT_FOUND]: 'NOT_FOUND',
+    [POWER_SYSTEM_ERROR.TASK_NOT_FOUND]: 'NOT_FOUND',
+    [POWER_SYSTEM_ERROR.REPORT_NOT_FOUND]: 'NOT_FOUND',
 
     // 第三方认证相关错误（与登录错误类别保持一致）
     [THIRDPARTY_ERROR.CREDENTIAL_INVALID]: 'UNAUTHENTICATED',
